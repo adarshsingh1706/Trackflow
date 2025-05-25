@@ -10,6 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
+
 
 const stages = [
   "New",
@@ -41,28 +46,26 @@ export default function AddLeadForm({ onSuccess }) {
   };
 
   const [errors, setErrors] = useState({
-  contact: '',
-  // Add other fields as needed
-});
+    contact: "",
+    // Add other fields as needed
+  });
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
-  if (!formData.contact) {
-    newErrors.contact = 'Contact is required';
-  } else if (
-    !validateEmail(formData.contact) && 
-    !validatePhone(formData.contact)
-  ) {
-    newErrors.contact = 'Enter a valid email or phone number';
-  }
+    if (!formData.contact) {
+      newErrors.contact = "Contact is required";
+    } else if (
+      !validateEmail(formData.contact) &&
+      !validatePhone(formData.contact)
+    ) {
+      newErrors.contact = "Enter a valid email or phone number";
+    }
 
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
-
-
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     try {
       const response = await fetch("/api/leads", {
@@ -132,7 +135,6 @@ export default function AddLeadForm({ onSuccess }) {
         <p className="text-sm text-red-500 mt-1">{errors.contact}</p>
       )}
 
-
       <Input
         placeholder="Company"
         value={formData.company}
@@ -163,14 +165,50 @@ export default function AddLeadForm({ onSuccess }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div>
+      {/* <div>
         <span>Follow-up Date: </span>
         <Calendar
           mode="single"
           selected={formData.followUpDate}
           onSelect={(date) => setFormData({ ...formData, followUpDate: date })}
         />
-      </div>
+      </div> */}
+
+
+<div className="grid gap-2">
+      <span className="text-sm font-medium">Follow-up Date</span>
+      
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-[240px] justify-start text-left font-normal",
+              !formData.followUpDate && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {formData.followUpDate ? (
+              format(formData.followUpDate, "PPP")
+            ) : (
+              <span>Pick a date</span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={formData.followUpDate}
+            onSelect={(date) =>
+              setFormData({ ...formData, followUpDate: date })
+            }
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+
+
       <Button type="submit">Add Lead</Button>
     </form>
   );

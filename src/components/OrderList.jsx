@@ -8,7 +8,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PackageOpen } from 'lucide-react';
+import { PackageOpen, Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 const statuses = {
   "Order Received": "bg-blue-100 text-blue-800",
@@ -18,11 +27,64 @@ const statuses = {
 };
 
 export default function OrderList({ orders, updateOrderStatus }) {
+  const [editingOrderId, setEditingOrderId] = useState(null);
   const [localStatuses, setLocalStatuses] = useState({});
+  const [localDates, setLocalDates] = useState({});
+  const [localTracking, setLocalTracking] = useState({});
 
-  const handleStatusChange = (orderId, newStatus) => {
-    setLocalStatuses((prev) => ({ ...prev, [orderId]: newStatus }));
-    updateOrderStatus(orderId, newStatus);
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const updates = { status: newStatus };
+
+      if (newStatus === "Dispatched") {
+        const existingOrder = orders.find((o) => o._id === orderId);
+        if (!existingOrder?.trackingInfo) {
+          const trackingId = `FEDEX-${Math.random()
+            .toString(36)
+            .slice(2, 10)
+            .toUpperCase()}`;
+          updates.trackingInfo = trackingId;
+          setLocalTracking((prev) => ({ ...prev, [orderId]: trackingId }));
+        }
+      }
+
+      await updateOrderStatus(orderId, updates);
+      setLocalStatuses((prev) => ({ ...prev, [orderId]: newStatus }));
+
+      toast({
+        title: "Status updated!",
+        description: `Changed to ${newStatus}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDateChange = async (orderId, selectedDate) => {
+    if (!selectedDate) return;
+    try {
+      await updateOrderStatus(orderId, {
+        dispatchDate: selectedDate.toISOString(),
+      });
+
+      setLocalDates((prev) => ({ ...prev, [orderId]: selectedDate }));
+      toast({
+        title: "Date set!",
+        description: `Dispatch date updated to ${format(selectedDate, "PPP")}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update date",
+        variant: "destructive",
+      });
+    } finally {
+      setEditingOrderId(null);
+    }
   };
 
   return (
@@ -35,7 +97,7 @@ export default function OrderList({ orders, updateOrderStatus }) {
           <TableHead>Dispatch Date</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>  {/*//adding TableBody here incase no lead is won*/}
+      <TableBody>
         {orders.length === 0 ? (
           <TableRow>
             <TableCell colSpan={4} className="text-center h-24">
@@ -49,9 +111,15 @@ export default function OrderList({ orders, updateOrderStatus }) {
         ) : (
           orders.map((order) => {
             const currentStatus = localStatuses[order._id] || order.status;
+            const dispatchDate =
+              localDates[order._id] ||
+              (order.dispatchDate ? new Date(order.dispatchDate) : null);
+            const tracking = localTracking[order._id] || order.trackingInfo;
+
             return (
               <TableRow key={order._id}>
                 <TableCell>#{order._id.slice(-4)}</TableCell>
+
                 <TableCell>
                   <select
                     value={currentStatus}
@@ -69,11 +137,61 @@ export default function OrderList({ orders, updateOrderStatus }) {
                     ))}
                   </select>
                 </TableCell>
-                <TableCell>{order.trackingInfo || "Not set"}</TableCell>
+
                 <TableCell>
-                  {order.dispatchDate
-                    ? new Date(order.dispatchDate).toLocaleDateString()
-                    : "Pending"}
+                  {currentStatus === "Dispatched" ? (
+                    <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                      {tracking || "Generating..."}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">
+                      {currentStatus === "Ready to Dispatch"
+                        ? "Will generate when dispatched"
+                        : "Not available"}
+                    </span>
+                  )}
+                </TableCell>
+
+                <TableCell>
+                  {editingOrderId === order._id ? (
+                    <Popover
+                      open={true}
+                      onOpenChange={(open) =>
+                        !open && setEditingOrderId(null)
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-[180px] justify-start text-left"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dispatchDate
+                            ? format(dispatchDate, "PPP")
+                            : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={dispatchDate}
+                          onSelect={(selectedDate) =>
+                            handleDateChange(order._id, selectedDate)
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingOrderId(order._id);
+                      }}
+                    >
+                      {dispatchDate ? format(dispatchDate, "PPP") : "Set date"}
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             );
