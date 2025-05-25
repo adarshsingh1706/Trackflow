@@ -36,7 +36,7 @@ export async function POST(request) {
 }
 
 
-//get all leads
+//get all leads api
 export async function GET() {
   try {
     const db = await connectToDatabase();

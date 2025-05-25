@@ -6,14 +6,14 @@ export async function POST(request) {
     const db = await connectToDatabase();
     const { leadId } = await request.json();
 
-    // Verify lead exists and is 'Won'
+    // Verifing lead exists and is won
     const lead = await db.collection('leads').findOne({
       _id: new ObjectId(leadId),
       stage: 'Won'
     });
     if (!lead) throw new Error('Lead must be in "Won" stage to create order');
 
-    // Create order
+    // Creating order
     const result = await db.collection('orders').insertOne({
       leadId: new ObjectId(leadId),
       status: 'Order Received',

@@ -1,49 +1,59 @@
-'use client';
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+"use client";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FolderOpen } from "lucide-react";
 
-const stages = ['New', 'Contacted', 'Qualified', 'Proposal Sent', 'Won', 'Lost'];
+const stages = [
+  "New",
+  "Contacted",
+  "Qualified",
+  "Proposal Sent",
+  "Won",
+  "Lost",
+];
 
 export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
   const { toast } = useToast();
   const [leads, setLeads] = useState(initialLeads);
 
   const handleDragStart = (e, leadId) => {
-    e.dataTransfer.setData('leadId', leadId);
-    e.currentTarget.classList.add('opacity-50', 'ring-2', 'ring-primary');
+    e.dataTransfer.setData("leadId", leadId);
+    e.currentTarget.classList.add("opacity-50", "ring-2", "ring-primary");
   };
 
   const handleDragEnd = (e) => {
-    e.currentTarget.classList.remove('opacity-50', 'ring-2', 'ring-primary');
+    e.currentTarget.classList.remove("opacity-50", "ring-2", "ring-primary");
   };
 
   const handleDrop = async (e, newStage) => {
     e.preventDefault();
-    const leadId = e.dataTransfer.getData('leadId');
+    const leadId = e.dataTransfer.getData("leadId");
     //optimistic ui update
     try {
-      setLeads(prev => prev.map(lead => 
-        lead._id === leadId ? { ...lead, stage: newStage } : lead
-      ));
+      setLeads((prev) =>
+        prev.map((lead) =>
+          lead._id === leadId ? { ...lead, stage: newStage } : lead
+        )
+      );
 
       const res = await fetch(`/api/leads/${leadId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage: newStage })
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: newStage }),
       });
 
-      if (!res.ok) throw new Error('Update failed');
-      if (newStage === 'Won') await onCreateOrder(leadId);
+      if (!res.ok) throw new Error("Update failed");
+      if (newStage === "Won") await onCreateOrder(leadId);
 
       toast({ title: `Moved to ${newStage}` });
     } catch (error) {
       setLeads(initialLeads);
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message,
-        variant: 'destructive'
+        variant: "destructive",
       });
     }
   };
@@ -65,10 +75,10 @@ export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
               >
                 <div className="bg-muted/50 rounded-lg p-3">
                   <h3 className="font-semibold text-lg mb-3 sticky top-0 bg-background p-2 rounded">
-                    {stage} ({leads.filter(l => l.stage === stage).length})
+                    {stage} ({leads.filter((l) => l.stage === stage).length})
                   </h3>
                   <div className="space-y-2">
-                    {leads
+                    {/* {leads
                       .filter((lead) => lead.stage === stage)
                       .map((lead) => (
                         <div
@@ -99,7 +109,58 @@ export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
                             )}
                           </div>
                         </div>
-                      ))}
+                      ))} */}
+
+                      {/*folder open icon in kanbab*/}
+
+                    {leads.filter((lead) => lead.stage === stage).length > 0 ? (
+                      leads
+                        .filter((lead) => lead.stage === stage)
+                        .map((lead) => (
+                          <div
+                            key={lead._id}
+                            className="bg-background p-3 rounded-lg border cursor-grab hover:shadow transition-shadow"
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, lead._id)}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium">{lead.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {lead.company}
+                                </p>
+                                {lead.productInterest && (
+                                  <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-secondary text-secondary-foreground rounded">
+                                    {lead.productInterest}
+                                  </span>
+                                )}
+                              </div>
+                              {lead.stage === "Won" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => onCreateOrder(lead._id)}
+                                  className="ml-2"
+                                >
+                                  Create Order
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-center p-6">
+                        <FolderOpen className="mx-auto h-10 w-10 mb-3 text-muted-foreground opacity-60" />
+                        <p className="text-muted-foreground">
+                          No {stage.toLowerCase()} leads
+                        </p>
+                        {stage === "New" && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Add lead(s) to get started
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
