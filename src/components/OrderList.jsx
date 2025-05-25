@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 
 const statuses = {
   "Order Received": "bg-blue-100 text-blue-800",
@@ -18,7 +18,7 @@ const statuses = {
 };
 
 export default function OrderList({ orders, updateOrderStatus }) {
-  // Local state to track status changes before confirming
+  // local state to track status changes before confirming
   const [localStatuses, setLocalStatuses] = useState({});
 
   const handleStatusChange = (orderId, newStatus) => {

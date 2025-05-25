@@ -22,7 +22,7 @@ export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
   const handleDrop = async (e, newStage) => {
     e.preventDefault();
     const leadId = e.dataTransfer.getData('leadId');
-    
+    //optimistic ui update
     try {
       setLeads(prev => prev.map(lead => 
         lead._id === leadId ? { ...lead, stage: newStage } : lead
