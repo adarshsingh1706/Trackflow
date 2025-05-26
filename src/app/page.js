@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import Dashboard from '@/components/Dashboard';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   const [leads, setLeads] = useState([]);
@@ -93,6 +94,7 @@ export default function Home() {
   useEffect(() => { fetchData(); }, []);
 
   return (
+    <>
     <main className="min-h-screen bg-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6 ">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
@@ -142,8 +144,12 @@ export default function Home() {
             <OrderList orders={orders} updateOrderStatus={updateOrderStatus} />
           </TabsContent>
         </Tabs>
+        
       </div>
+      
     </main>
+    <Footer/>
+</>
   );
 }
 
