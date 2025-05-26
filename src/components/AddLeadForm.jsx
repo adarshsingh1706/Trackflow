@@ -78,15 +78,20 @@ export default function AddLeadForm({ onSuccess }) {
           followUpDate: formData.followUpDate.toISOString(),
         }),
       });
+        const responseClone = response.clone();
+
 
       if (!response.ok) {
         throw new Error("Failed to add lead");
       }
-
+       
+const newLead = await response.json(); 
+     
       // Show success toast
       toast({
         title: "Success!",
         description: "Lead added successfully",
+        
       });
 
       // Reset form
@@ -100,7 +105,7 @@ export default function AddLeadForm({ onSuccess }) {
       });
 
       // Call success callback if provided
-      if (onSuccess) onSuccess();
+      if (onSuccess)  onSuccess(responseClone);
     } catch (error) {
       toast({
         title: "Error",

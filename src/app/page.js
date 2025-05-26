@@ -107,20 +107,34 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
+import Dashboard from '@/components/Dashboard';
 
 export default function Home() {
   const [leads, setLeads] = useState([]);
   const [orders, setOrders] = useState([]);
 
-  // Fetch all data
-  const fetchData = async () => {
+  // Fetching all data
+  const fetchData = async (newLead =null) => {
     try {
       const [leadsRes, ordersRes] = await Promise.all([
         fetch('/api/leads'),
         fetch('/api/orders')
       ]);
-      setLeads(await leadsRes.json());
-      setOrders(await ordersRes.json());
+
+      let leadsData = await leadsRes.json();
+    
+    // If new lead provided, ensure it's included
+    if (newLead) {
+      if (!leadsData.some(l => l.id === newLead.id)) {
+        leadsData = [newLead, ...leadsData];
+      }
+    }
+    
+    setLeads(leadsData);
+   setOrders(await ordersRes.json());
+
+      // setLeads(await leadsRes.json());
+      // setOrders(await ordersRes.json());
     } catch (error) {
       console.error('Fetch error:', error);
     }
@@ -179,32 +193,48 @@ export default function Home() {
   useEffect(() => { fetchData(); }, []);
 
   return (
-    <main className="min-h-screen bg-slate-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-800 mb-6">TrackFlow CRM</h1>
+    <main className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800">TrackFlow CRM</h1>
+            <p className="text-sm text-slate-500">Manage your sales pipeline efficiently</p>
+          </div>
+          <Dashboard leads={leads} orders={orders} />
+        </div>
 
-        <Tabs defaultValue="leads" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
-            <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
+        <Tabs defaultValue="leads" className="bg-white rounded-lg shadow">
+          <TabsList className="w-full justify-start rounded-t-lg rounded-b-none space-x-0 border-b">
+            <TabsTrigger 
+              value="leads" 
+              className="data-[state=active]:bg-slate-100 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+            >
+              Leads ({leads.length})
+            </TabsTrigger>
+            <TabsTrigger 
+              value="orders"
+              className="data-[state=active]:bg-slate-100 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+            >
+              Orders ({orders.length})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="leads">
-            <Card className="p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Add New Lead</h2>
-              <AddLeadForm onSuccess={fetchData} />
-            </Card>
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Sales Pipeline</h2>
-              <LeadKanban leads={leads} onCreateOrder={createOrder} />
-            </Card>
+          <TabsContent value="leads" className="p-0">
+            <div className="space-y-4 p-6">
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold">Add New Lead</h2>
+                <AddLeadForm onSuccess={fetchData} />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold">Sales Pipeline</h2>
+                <LeadKanban leads={leads} onCreateOrder={createOrder} key={leads.length} />
+              </div>
+            </div>
           </TabsContent>
 
-          <TabsContent value="orders">
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Order Management</h2>
-              <OrderList orders={orders} updateOrderStatus={updateOrderStatus} />
-            </Card>
+          <TabsContent value="orders" className="p-6">
+            <OrderList orders={orders} updateOrderStatus={updateOrderStatus} />
           </TabsContent>
         </Tabs>
       </div>
