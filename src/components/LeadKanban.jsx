@@ -46,6 +46,37 @@ export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
 
       if (!res.ok) throw new Error("Update failed");
       if (newStage === "Won") await onCreateOrder(leadId);
+      if (newStage === "Won") {
+        const wonLead = leads.find(lead => lead._id === leadId);
+        
+        if (wonLead?.contact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(wonLead.contact)) {
+          try {
+            await fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: wonLead.contact,
+                leadName: wonLead.name,
+                company: wonLead.company
+              }),
+            });
+            toast({
+              title: 'Email Sent',
+              description: 'Congratulations email sent to the client',
+            });
+          } catch (emailError) {
+            
+            console.error('Email sending error:', error.message, error);
+
+            toast({
+              title: 'Email Failed',
+              description: 'Could not send congratulations email',
+              variant: 'destructive',
+            });
+          }
+        }
+
+      }
 
       toast({ title: `Moved to ${newStage}` });
     } catch (error) {
