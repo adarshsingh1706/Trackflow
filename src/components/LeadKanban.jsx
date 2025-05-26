@@ -62,7 +62,10 @@ export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Sales Pipeline</CardTitle>
+          <CardTitle className="text-xl md:text-2xl font-semibold tracking-tight text-slate-800">
+  Sales Pipeline Overview
+</CardTitle>
+
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 overflow-x-auto pb-2">
@@ -171,3 +174,5 @@ export default function LeadKanban({ leads: initialLeads, onCreateOrder }) {
     </div>
   );
 }
+
+

@@ -94,12 +94,17 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-800">TrackFlow CRM</h1>
-            <p className="text-sm text-slate-500">Manage your sales pipeline efficiently</p>
-          </div>
+      <div className="max-w-7xl mx-auto space-y-6 ">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
+         <div>
+  <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
+    Welcome to <span className="text-blue-600">TrackFlow CRM</span>
+  </h1>
+  <p className="mt-1 text-base md:text-lg text-slate-500">
+    Effortlessly manage your leads,<br/> follow-ups and orders in one place.
+  </p>
+</div>
+
           <Dashboard leads={leads} orders={orders} />
         </div>
 
@@ -141,3 +146,6 @@ export default function Home() {
     </main>
   );
 }
+
+
+
